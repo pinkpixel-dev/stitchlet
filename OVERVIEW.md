@@ -65,8 +65,10 @@ Current API routes:
 - `GET /api/projects/:id/pdf/download` — serve PDF as attachment
 - `POST /api/projects/:id/pdf` — upload PDF
 - `DELETE /api/projects/:id/pdf` — remove PDF
+- `GET /api/system/backup` — export database and files as a ZIP archive
+- `POST /api/system/restore` — restore library from ZIP archive and restart server
 
-Project, counter, photo, and section routes are all backed by SQLite through Drizzle. The dashboard, create project page, and project detail page use these routes for live data. Project detail supports add/increment/decrement/reset/complete/delete for counters, add/remove for custom material sections, and upload/replace/remove for the project photo.
+Project, counter, photo, section, and system backup routes are all backed by SQLite through Drizzle or file management services. The dashboard, create project page, and project detail page use these routes for live data. Project detail supports add/increment/decrement/reset/complete/delete for counters, add/remove for custom material sections, and upload/replace/remove for the project photo.
 
 ## Database
 

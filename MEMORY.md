@@ -131,30 +131,46 @@ Note for next time:
 
 - Any time there is a form inside another form in this app, this will silently break. Always use controlled state + click handlers for nested actions inside an existing form element.
 
+### Decision: Export and import backup archives via system zip/unzip commands and better-sqlite3 backup API
+
+What was decided:
+- Implement a backend zip export and restore module that utilizes system `zip`/`unzip` commands.
+- Use `sqlite.backup()` to obtain a safe, un-locked copy of the active database before compression.
+- For backup restore: write ZIP to disk, close SQLite connection, delete old files, run `unzip`, and exit the process (`process.exit(0)`) to let the process runner (docker, pm2, dev server) reboot the server.
+- Move dark/light mode toggle to a dedicated "Appearance" section in Settings to keep the app-shell clean.
+
+Why:
+- Avoids extra NPM packaging weight or native compilation errors.
+- SQLite backup API avoids corruption risk from zipping an open, actively written database file.
+- Re-triggering a reboot is the cleanest way to clear sqlite descriptors and load the new database file safely.
+
+### Decision: Filter and sort dashboard projects client-side
+
+What was decided:
+- Implement reactive search (matching project name, notes, hook, yarn) and status filtering (All, Active, Paused, Finished, Frogged) client-side.
+- Sort projects dynamically by updated date descending, alphabetically by title, or status.
+- Add descriptive empty states when search filters return no results.
+
+Why:
+- Standard for small-scale self-hosted instances. Client-side state offers instant filtering and sorting for an exceptionally snappy user experience.
+
 ### Session end: 2026-06-13
 
 Worked on:
-
-- Project photo upload (backend + UI): upload, replace, remove; square display via CSS.
-- Custom material entries: add/remove backed by `custom_sections` table; moved controls into edit project form.
-- Fixed nested form bug causing silent failure on material add.
-- Replaced deprecated `FormEvent` with `SyntheticEvent<HTMLFormElement>`.
+- Backend backup and restore endpoints (`/api/system/backup` & `/api/system/restore`).
+- Settings page UI refresh (sections for Appearance, Backup & Restore, and Self-hosted info).
+- Client-side search, status filters, and sorting controls for the projects dashboard.
+- System integration tests in Vitest.
 
 Completed:
-
-- Phase 4 (photos) fully implemented on detail page.
-- Custom material add/remove working end-to-end.
-- All form event types updated for React 19 / TypeScript 6.
-
-In progress: nothing.
+- Settings backup & restore workflow end-to-end.
+- Dashboard filtering, searching, and sorting functionality.
+- Server app dependencies refactoring to inject sqlite instance for easy test mocking.
 
 Decisions made:
-
-- Custom material controls live in the edit form, not the view-mode panel. Keeps view-only panel read-only, consistent with other material fields.
-- No server-side image processing for now. Square crop is CSS only.
+- Rely on system `zip` and `unzip` tools directly since they are standard on Linux hosting.
+- Exit process upon restore to trigger supervisor restarts.
 
 Next session priorities:
-
-1. PDF upload route (POST `/api/projects/:id/pdf`), serve route (GET), and download route.
-2. In-app PDF viewer (likely `<iframe>` or `<embed>` pointing at the serve route).
-3. Dashboard card photo thumbnails.
+- Setup Docker files and compose configurations for deployment.
+- PWA setup and manifest file.

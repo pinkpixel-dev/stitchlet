@@ -2,6 +2,10 @@
 
 ## 2026-06-13
 
+- Added backup export and import/restore capability to Settings. Users can download a ZIP file of the database and media folder, or restore an archive to overwrite local data and trigger a server reboot.
+- Implemented `/api/system/backup` and `/api/system/restore` backend routes utilizing SQLite backup APIs and native zip/unzip commands.
+- Wired the dashboard search, status filters, and sorting dropdowns to dynamically filter and sort projects client-side with visual empty states.
+- Added Vitest integration tests for the new system backup routes.
 - Added PDF upload, inline viewing, and download to the project detail Pattern section.
 - PDF files are stored at `uploads/projects/<id>/pattern.pdf` and served via `/api/projects/:id/pdf`.
 - Added a full-screen PDF viewer modal using a native browser `<iframe>` — no dependencies needed.

@@ -176,6 +176,23 @@ export async function deleteProjectPdf(projectId: string) {
   }
 }
 
+export async function restoreBackup(file: File) {
+  const formData = new FormData();
+  formData.append("backup", file);
+
+  const response = await fetch("/api/system/restore", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Backup restore failed.");
+  }
+
+  return response.json() as Promise<{ success: boolean; message: string }>;
+}
+
 async function request<T>(path: string, init?: RequestInit) {
   const response = await fetch(path, {
     ...init,

@@ -75,5 +75,5 @@ Status: add and remove implemented. Entries persist to the `custom_sections` tab
 - Web app manifest
 - Offline shell
 - Installable icon support
-- Backup script
-- In-app export
+- Backup script (implemented via zip/unzip system routes)
+- In-app export and restore (implemented on settings page)

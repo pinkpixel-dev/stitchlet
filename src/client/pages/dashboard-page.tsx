@@ -19,6 +19,10 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("updated");
+
   useEffect(() => {
     let isMounted = true;
 
@@ -45,6 +49,34 @@ export function DashboardPage() {
     };
   }, []);
 
+  const filteredProjects = projects
+    .filter((project) => {
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = project.title.toLowerCase().includes(query);
+        const matchesNotes = project.notes?.toLowerCase().includes(query) ?? false;
+        const matchesYarn = project.yarnType?.toLowerCase().includes(query) ?? false;
+        const matchesHook = project.hookSize?.toLowerCase().includes(query) ?? false;
+        if (!matchesTitle && !matchesNotes && !matchesYarn && !matchesHook) {
+          return false;
+        }
+      }
+      if (statusFilter !== "all" && project.status !== statusFilter) {
+        return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "title") {
+        return a.title.localeCompare(b.title);
+      }
+      if (sortBy === "status") {
+        return a.status.localeCompare(b.status);
+      }
+      // Default: updated date descending
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+
   return (
     <section className="space-y-6">
       <header className="rounded-lg border border-(--border) bg-(--shell) p-5">
@@ -68,19 +100,29 @@ export function DashboardPage() {
               className="h-11 w-full rounded-md border border-(--border) bg-(--surface) pl-10 pr-3 text-sm outline-none transition placeholder:text-(--muted) focus:border-(--accent-pink)"
               placeholder="Search projects"
               type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </label>
-          <select className="h-11 rounded-md border border-(--border) bg-(--surface) px-3 text-sm outline-none focus:border-(--accent-pink)">
-            <option>All statuses</option>
-            <option>Active</option>
-            <option>Paused</option>
-            <option>Finished</option>
-            <option>Frogged</option>
+          <select
+            className="h-11 rounded-md border border-(--border) bg-(--surface) px-3 text-sm outline-none focus:border-(--accent-pink)"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="finished">Finished</option>
+            <option value="frogged">Frogged</option>
           </select>
-          <select className="h-11 rounded-md border border-(--border) bg-(--surface) px-3 text-sm outline-none focus:border-(--accent-pink)">
-            <option>Updated date</option>
-            <option>Project title</option>
-            <option>Status</option>
+          <select
+            className="h-11 rounded-md border border-(--border) bg-(--surface) px-3 text-sm outline-none focus:border-(--accent-pink)"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="updated">Updated date</option>
+            <option value="title">Project title</option>
+            <option value="status">Status</option>
           </select>
           <div className="grid h-11 grid-cols-2 rounded-md border border-(--border) bg-(--surface) p-1">
             <button
@@ -117,9 +159,14 @@ export function DashboardPage() {
 
       {viewMode === "grid" ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {projects.map((project) => (
+          {filteredProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
+          {projects.length > 0 && filteredProjects.length === 0 && (
+            <div className="col-span-full rounded-lg border border-dashed border-(--border) bg-(--surface-soft) p-8 text-center text-sm text-(--muted)">
+              No projects match your search filters.
+            </div>
+          )}
           <Link
             className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-(--border) bg-(--surface-soft) p-6 text-center transition hover:border-(--accent-purple)"
             to="/projects/new"
@@ -137,8 +184,10 @@ export function DashboardPage() {
         <div className="rounded-lg border border-(--border) bg-(--shell) overflow-hidden">
           {projects.length === 0 ? (
             <p className="p-5 text-sm text-(--muted)">No projects yet.</p>
+          ) : filteredProjects.length === 0 ? (
+            <p className="p-5 text-sm text-(--muted)">No projects match your search filters.</p>
           ) : null}
-          {projects.map((project, i) => (
+          {filteredProjects.map((project, i) => (
             <Link
               className={`flex items-center gap-4 px-5 py-4 transition hover:bg-(--surface) ${i > 0 ? "border-t border-(--border)" : ""}`}
               key={project.id}
