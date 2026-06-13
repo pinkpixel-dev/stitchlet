@@ -48,6 +48,34 @@ export const counterSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const createCounterSchema = counterSchema
+  .omit({
+    id: true,
+    projectId: true,
+    isCompleted: true,
+    sortOrder: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    name: z.string().min(1, "Counter name is required."),
+    currentValue: z.number().int().min(0).default(0),
+  });
+
+export const updateCounterSchema = counterSchema
+  .pick({
+    name: true,
+    targetValue: true,
+    notes: true,
+    isCompleted: true,
+    sortOrder: true,
+  })
+  .extend({
+    type: z.enum(["row", "round"]).optional(),
+    currentValue: z.number().int().min(0).optional(),
+  })
+  .partial();
+
 export const customSectionSchema = z.object({
   id: z.string(),
   projectId: z.string(),
@@ -63,4 +91,6 @@ export type Project = z.infer<typeof projectSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 export type UpdateProjectInput = z.infer<typeof updateProjectSchema>;
 export type Counter = z.infer<typeof counterSchema>;
+export type CreateCounterInput = z.infer<typeof createCounterSchema>;
+export type UpdateCounterInput = z.infer<typeof updateCounterSchema>;
 export type CustomSection = z.infer<typeof customSectionSchema>;

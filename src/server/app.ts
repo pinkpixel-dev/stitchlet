@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { db as defaultDb } from "./db";
 import * as schema from "./db/schema";
+import { createCounterRoutes } from "./routes/counters";
 import { createProjectRoutes } from "./routes/projects";
 
 export type AppDependencies = {
@@ -24,6 +25,7 @@ export function createApp(dependencies: AppDependencies = {}) {
   );
 
   app.route("/api/projects", createProjectRoutes({ db }));
+  app.route("/api/counters", createCounterRoutes({ db }));
 
   return app;
 }

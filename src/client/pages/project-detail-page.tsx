@@ -1,18 +1,21 @@
-import { ArrowLeft, Download, FileText, Minus, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Download, FileText, Minus, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { sampleCounters, sampleSections } from "../../shared/sample-data";
-import type { Project } from "../../shared/schemas";
+import { sampleSections } from "../../shared/sample-data";
+import type { Counter, Project } from "../../shared/schemas";
 import { Button } from "../components/button";
 import { Field, SelectInput, TextArea, TextInput } from "../components/field";
-import { deleteProject, getProject, updateProject } from "../lib/api";
+import { createCounter, deleteCounter, deleteProject, getProject, listCounters, updateCounter, updateProject } from "../lib/api";
 
 export function ProjectDetailPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [counterError, setCounterError] = useState<string | null>(null);
+  const [counters, setCounters] = useState<Counter[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddingCounter, setIsAddingCounter] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -32,6 +35,31 @@ export function ProjectDetailPage() {
       .catch(() => {
         if (isMounted) {
           setError("Project could not be loaded.");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    listCounters(projectId)
+      .then((response) => {
+        if (isMounted) {
+          setCounters(response.counters);
+          setCounterError(null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setCounterError("Counters could not be loaded.");
         }
       });
 
@@ -92,6 +120,52 @@ export function ProjectDetailPage() {
     }
   }
 
+  async function handleAddCounter(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!project) {
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const response = await createCounter(project.id, {
+        name: String(formData.get("name") ?? ""),
+        type: String(formData.get("type") ?? "row") as Counter["type"],
+        currentValue: numberFromForm(formData.get("currentValue"), 0),
+        targetValue: optionalNumber(formData.get("targetValue")),
+        notes: optionalString(formData.get("notes")),
+      });
+
+      setCounters((current) => [...current, response.counter]);
+      setIsAddingCounter(false);
+      setCounterError(null);
+    } catch {
+      setCounterError("Counter could not be added.");
+    }
+  }
+
+  async function patchCounter(counter: Counter, input: Partial<Counter>) {
+    try {
+      const response = await updateCounter(counter.id, input);
+      setCounters((current) => current.map((item) => (item.id === counter.id ? response.counter : item)));
+      setCounterError(null);
+    } catch {
+      setCounterError("Counter could not be updated.");
+    }
+  }
+
+  async function handleDeleteCounter(counter: Counter) {
+    try {
+      await deleteCounter(counter.id);
+      setCounters((current) => current.filter((item) => item.id !== counter.id));
+      setCounterError(null);
+    } catch {
+      setCounterError("Counter could not be deleted.");
+    }
+  }
+
   if (error && !project) {
     return (
       <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
@@ -112,7 +186,6 @@ export function ProjectDetailPage() {
     );
   }
 
-  const counters = sampleCounters.filter((counter) => counter.projectId === project.id);
   const sections = sampleSections.filter((section) => section.projectId === project.id);
 
   return (
@@ -233,27 +306,107 @@ export function ProjectDetailPage() {
           <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Counters</h2>
-              <Button variant="ghost">
+              <Button onClick={() => setIsAddingCounter((value) => !value)} variant="ghost">
                 <Plus size={17} />
-                Add counter
+                {isAddingCounter ? "Cancel" : "Add counter"}
               </Button>
             </div>
+
+            {counterError ? <p className="mt-3 text-sm text-[var(--muted)]">{counterError}</p> : null}
+
+            {isAddingCounter ? (
+              <form className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-4" onSubmit={handleAddCounter}>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <Field label="Counter name">
+                    <TextInput name="name" placeholder="Body" required />
+                  </Field>
+                  <Field label="Type">
+                    <SelectInput defaultValue="row" name="type">
+                      <option value="row">Row</option>
+                      <option value="round">Round</option>
+                    </SelectInput>
+                  </Field>
+                  <Field label="Current">
+                    <TextInput min={0} name="currentValue" type="number" defaultValue={0} />
+                  </Field>
+                  <Field label="Target">
+                    <TextInput min={1} name="targetValue" placeholder="24" type="number" />
+                  </Field>
+                </div>
+                <div className="mt-3">
+                  <Field label="Notes">
+                    <TextArea name="notes" placeholder="Optional counter note." />
+                  </Field>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <Button type="submit" variant="primary">
+                    Save counter
+                  </Button>
+                </div>
+              </form>
+            ) : null}
+
             <div className="mt-4 space-y-3">
+              {counters.length === 0 ? (
+                <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)]">
+                  No counters yet. Add one for the row or round you are working on.
+                </div>
+              ) : null}
               {counters.map((counter) => (
                 <div className="grid gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 md:grid-cols-[1fr_auto]" key={counter.id}>
                   <div>
-                    <p className="font-medium">{counter.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium">{counter.name}</p>
+                      {counter.isCompleted ? (
+                        <span className="rounded bg-[var(--chip)] px-2 py-1 text-xs text-[var(--accent-purple)]">Complete</span>
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-sm text-[var(--muted)]">
                       {counter.type === "round" ? "Round" : "Row"} {counter.currentValue}
                       {counter.targetValue ? ` / ${counter.targetValue}` : ""}
                     </p>
+                    {counter.notes ? <p className="mt-2 text-sm text-[var(--muted)]">{counter.notes}</p> : null}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button className="h-11 w-14 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)]" type="button" title="Decrement">
+                  <div className="grid grid-cols-5 gap-2">
+                    <button
+                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)]"
+                      type="button"
+                      title="Decrement"
+                      onClick={() => patchCounter(counter, { currentValue: Math.max(0, counter.currentValue - 1), isCompleted: false })}
+                    >
                       <Minus className="mx-auto" size={18} />
                     </button>
-                    <button className="h-11 w-14 rounded-md border border-[var(--border)] bg-[var(--accent-pink)] text-[var(--button-text)]" type="button" title="Increment">
+                    <button
+                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--accent-pink)] text-[var(--button-text)]"
+                      type="button"
+                      title="Increment"
+                      onClick={() => patchCounter(counter, { currentValue: counter.currentValue + 1 })}
+                    >
                       <Plus className="mx-auto" size={18} />
+                    </button>
+                    <button
+                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      type="button"
+                      title="Reset"
+                      onClick={() => patchCounter(counter, { currentValue: 0, isCompleted: false })}
+                    >
+                      <RotateCcw className="mx-auto" size={17} />
+                    </button>
+                    <button
+                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      type="button"
+                      title="Toggle complete"
+                      onClick={() => patchCounter(counter, { isCompleted: !counter.isCompleted })}
+                    >
+                      <CheckCircle2 className="mx-auto" size={17} />
+                    </button>
+                    <button
+                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      type="button"
+                      title="Delete counter"
+                      onClick={() => handleDeleteCounter(counter)}
+                    >
+                      <Trash2 className="mx-auto" size={17} />
                     </button>
                   </div>
                 </div>
@@ -286,6 +439,16 @@ export function ProjectDetailPage() {
 function optionalString(value: FormDataEntryValue | null) {
   const text = String(value ?? "").trim();
   return text.length > 0 ? text : undefined;
+}
+
+function optionalNumber(value: FormDataEntryValue | null) {
+  const text = String(value ?? "").trim();
+  return text.length > 0 ? Number(text) : undefined;
+}
+
+function numberFromForm(value: FormDataEntryValue | null, fallback: number) {
+  const text = String(value ?? "").trim();
+  return text.length > 0 ? Number(text) : fallback;
 }
 
 function DetailRow({ label, value }: { label: string; value?: string }) {

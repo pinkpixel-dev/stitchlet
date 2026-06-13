@@ -54,3 +54,21 @@ What was rejected and why:
 
 - A full migration framework was rejected for this slice because a small SQLite initializer is simpler while the schema is still early.
 - Seeding sample projects into the real database was rejected because the self-hosted app should start clean and private by default.
+
+### Decision: Make counters real before file uploads
+
+What was decided:
+
+- Add SQLite-backed counter create, list, update, and delete routes.
+- Wire project detail counters to the API for adding, incrementing, decrementing, resetting, completing, and deleting counters.
+- Keep counter duplicate/reorder, custom sections, photos, PDFs, auth, Docker, and PWA work out of this slice.
+
+Why:
+
+- Counters are the first feature that makes Stitchlet useful during active crochet work.
+- Building counters before file uploads keeps the app practical while avoiding file-storage complexity too early.
+
+What was rejected and why:
+
+- Duplicate/reorder controls were rejected for this slice because add/update/delete covers the core counter workflow with less UI complexity.
+- A richer counter editor was rejected because simple mobile-friendly controls matter more for the first usable pass.

@@ -1,4 +1,4 @@
-import type { CreateProjectInput, Project, UpdateProjectInput } from "../../shared/schemas";
+import type { Counter, CreateCounterInput, CreateProjectInput, Project, UpdateCounterInput, UpdateProjectInput } from "../../shared/schemas";
 
 type ProjectsResponse = {
   projects: Project[];
@@ -6,6 +6,14 @@ type ProjectsResponse = {
 
 type ProjectResponse = {
   project: Project;
+};
+
+type CountersResponse = {
+  counters: Counter[];
+};
+
+type CounterResponse = {
+  counter: Counter;
 };
 
 export async function listProjects() {
@@ -37,6 +45,34 @@ export async function deleteProject(id: string) {
 
   if (!response.ok) {
     throw new Error("Project could not be deleted.");
+  }
+}
+
+export async function listCounters(projectId: string) {
+  return request<CountersResponse>(`/api/projects/${projectId}/counters`);
+}
+
+export async function createCounter(projectId: string, input: CreateCounterInput) {
+  return request<CounterResponse>(`/api/projects/${projectId}/counters`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateCounter(id: string, input: UpdateCounterInput) {
+  return request<CounterResponse>(`/api/counters/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteCounter(id: string) {
+  const response = await fetch(`/api/counters/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Counter could not be deleted.");
   }
 }
 

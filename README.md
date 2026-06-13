@@ -74,12 +74,12 @@ Implemented:
 - Drizzle SQLite schema
 - Hono API
 - SQLite-backed project create, list, read, update, and delete behavior
+- SQLite-backed counter create, list, update, and delete behavior
 
 Not implemented yet:
 
 - Photo uploads
 - PDF uploads/viewing/downloads
-- Counter mutations
 - Custom section mutations
 - Auth
 - Docker deployment

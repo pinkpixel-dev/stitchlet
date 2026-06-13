@@ -30,7 +30,9 @@ Status: implemented for project records.
 - Set targets
 - Reset counters
 - Mark counters complete
-- Duplicate and delete counters
+- Delete counters
+
+Status: implemented for basic counter records. Duplicate and reorder can come later if needed.
 
 ## Phase 4: Photos
 

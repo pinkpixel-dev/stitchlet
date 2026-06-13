@@ -50,8 +50,12 @@ Current API routes:
 - `GET /api/projects/:id`
 - `PATCH /api/projects/:id`
 - `DELETE /api/projects/:id`
+- `GET /api/projects/:id/counters`
+- `POST /api/projects/:id/counters`
+- `PATCH /api/counters/:id`
+- `DELETE /api/counters/:id`
 
-Project routes are backed by SQLite through Drizzle. The dashboard, create project page, and project detail page use these routes for project create, list, read, update, and delete behavior.
+Project and counter routes are backed by SQLite through Drizzle. The dashboard, create project page, and project detail page use these routes for project create, list, read, update, and delete behavior. Project detail also uses the counter API for add, increment, decrement, reset, complete, and delete controls.
 
 ## Database
 
@@ -80,9 +84,9 @@ The app should not expose `uploads/` directly. Files should eventually be served
 
 ## Next Technical Steps
 
-1. Add counter mutations.
-2. Add photo uploads.
-3. Add PDF upload, viewing, and download routes.
+1. Add photo uploads.
+2. Add PDF upload, viewing, and download routes.
+3. Add custom section mutations.
 4. Add migration generation workflow around the current SQLite initializer.
 5. Add Docker deployment files.
 6. Add PWA manifest and offline shell.

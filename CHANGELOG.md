@@ -8,6 +8,9 @@
 - Added SQLite-backed project CRUD with API routes for create, list, read, update, and delete.
 - Wired the dashboard, create project page, and project detail page to the project API instead of static sample project data.
 - Added Vitest coverage for the project CRUD API.
+- Added SQLite-backed counter CRUD with API routes for create, list, update, and delete.
+- Wired project detail counters to the API with add, increment, decrement, reset, complete, and delete controls.
+- Added Vitest coverage for the counter CRUD API.
 
 ## 2026-06-12
 

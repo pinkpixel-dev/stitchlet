@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { createProjectSchema, updateProjectSchema } from "../../shared/schemas";
 import type { AppDependencies } from "../app";
 import { createProjectRepository } from "../services/projects";
+import { createProjectCounterRoutes } from "./counters";
 
 export function createProjectRoutes({ db }: Required<AppDependencies>) {
   const projectRoutes = new Hono();
@@ -58,6 +59,8 @@ export function createProjectRoutes({ db }: Required<AppDependencies>) {
 
     return c.body(null, 204);
   });
+
+  projectRoutes.route("/:id/counters", createProjectCounterRoutes({ db }));
 
   return projectRoutes;
 }
