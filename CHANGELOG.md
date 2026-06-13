@@ -2,6 +2,7 @@
 
 ## 2026-06-13
 
+- Added app previews and screenshots to `README.md`.
 - Refactored `README.md` as user-facing GitHub documentation and created `README_DOCKER.md` for Docker Hub listings.
 - Added multi-stage production Dockerfile and Docker Compose configurations supporting persistent bind mounts for app data, uploaded files, and backups.
 - Integrated progressive web application (PWA) configuration: created web app manifest (`site.webmanifest`), generated full multi-resolution icon assets using ImageMagick, and registered an offline-capable Service Worker (`sw.js`) utilizing a Network-First caching strategy.

@@ -6,6 +6,11 @@
 
 Stitchlet is a private, self-hosted crochet project companion designed to run on your own hardware (mini-PC, NAS, home server, or local computer). It keeps all of your pattern PDFs, progress photos, stitch counters, and notes local, cozy, and completely under your control. No surprise cloud subscriptions, no telemetry, just your projects.
 
+<p align="center">
+  <img src="./screenshots/screenshot1.png" alt="Stitchlet Dashboard" width="48%" />
+  <img src="./screenshots/screenshot2.png" alt="Stitchlet Project Details" width="48%" />
+</p>
+
 ## Core Features
 
 * 📱 **Cozy, Responsive UI** – Sleek charcoal-themed dashboard with grid and list views, optimized for both desktop monitors and amigurumi-friendly mobile screens.
