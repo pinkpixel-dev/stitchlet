@@ -86,6 +86,19 @@ export const customSectionSchema = z.object({
   updatedAt: z.string(),
 });
 
+export const createCustomSectionSchema = customSectionSchema.omit({
+  id: true,
+  projectId: true,
+  sortOrder: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Label is required."),
+  content: z.string().default(""),
+});
+
+export const updateCustomSectionSchema = createCustomSectionSchema.partial();
+
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
@@ -94,3 +107,5 @@ export type Counter = z.infer<typeof counterSchema>;
 export type CreateCounterInput = z.infer<typeof createCounterSchema>;
 export type UpdateCounterInput = z.infer<typeof updateCounterSchema>;
 export type CustomSection = z.infer<typeof customSectionSchema>;
+export type CreateCustomSectionInput = z.infer<typeof createCustomSectionSchema>;
+export type UpdateCustomSectionInput = z.infer<typeof updateCustomSectionSchema>;

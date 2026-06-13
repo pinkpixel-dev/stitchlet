@@ -1,4 +1,14 @@
-import type { Counter, CreateCounterInput, CreateProjectInput, Project, UpdateCounterInput, UpdateProjectInput } from "../../shared/schemas";
+import type {
+  Counter,
+  CreateCounterInput,
+  CreateCustomSectionInput,
+  CreateProjectInput,
+  CustomSection,
+  Project,
+  UpdateCounterInput,
+  UpdateCustomSectionInput,
+  UpdateProjectInput,
+} from "../../shared/schemas";
 
 type ProjectsResponse = {
   projects: Project[];
@@ -14,6 +24,14 @@ type CountersResponse = {
 
 type CounterResponse = {
   counter: Counter;
+};
+
+type SectionsResponse = {
+  sections: CustomSection[];
+};
+
+type SectionResponse = {
+  section: CustomSection;
 };
 
 export async function listProjects() {
@@ -76,6 +94,61 @@ export async function deleteCounter(id: string) {
   }
 }
 
+export async function listSections(projectId: string) {
+  return request<SectionsResponse>(`/api/projects/${projectId}/sections`);
+}
+
+export async function createSection(projectId: string, input: CreateCustomSectionInput) {
+  return request<SectionResponse>(`/api/projects/${projectId}/sections`, {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function updateSection(id: string, input: UpdateCustomSectionInput) {
+  return request<SectionResponse>(`/api/sections/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteSection(id: string) {
+  const response = await fetch(`/api/sections/${id}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Section could not be deleted.");
+  }
+}
+
+export async function uploadProjectPhoto(projectId: string, file: File) {
+  const formData = new FormData();
+  formData.append("photo", file);
+
+  const response = await fetch(`/api/projects/${projectId}/photo`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || "Photo upload failed.");
+  }
+
+  return response.json() as Promise<ProjectResponse>;
+}
+
+export async function deleteProjectPhoto(projectId: string) {
+  const response = await fetch(`/api/projects/${projectId}/photo`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error("Photo could not be deleted.");
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit) {
   const response = await fetch(path, {
     ...init,
@@ -92,3 +165,4 @@ async function request<T>(path: string, init?: RequestInit) {
 
   return response.json() as Promise<T>;
 }
+

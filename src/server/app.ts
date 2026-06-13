@@ -5,6 +5,7 @@ import { db as defaultDb } from "./db";
 import * as schema from "./db/schema";
 import { createCounterRoutes } from "./routes/counters";
 import { createProjectRoutes } from "./routes/projects";
+import { createSectionRoutes } from "./routes/sections";
 
 export type AppDependencies = {
   db?: BetterSQLite3Database<typeof schema>;
@@ -26,6 +27,8 @@ export function createApp(dependencies: AppDependencies = {}) {
 
   app.route("/api/projects", createProjectRoutes({ db }));
   app.route("/api/counters", createCounterRoutes({ db }));
+  app.route("/api/sections", createSectionRoutes({ db }));
 
   return app;
 }
+

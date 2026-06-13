@@ -59,6 +59,14 @@ export function createProjectRepository(db: Database) {
       return this.findById(id);
     },
 
+    async updatePhotoPath(id: string, photoPath: string | null) {
+      await db
+        .update(schema.projects)
+        .set({ photoPath: photoPath ?? undefined, updatedAt: new Date().toISOString() })
+        .where(eq(schema.projects.id, id));
+      return this.findById(id);
+    },
+
     async delete(id: string) {
       const existing = await this.findById(id);
 

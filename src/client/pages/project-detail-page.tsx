@@ -1,11 +1,35 @@
-import { ArrowLeft, CheckCircle2, Download, FileText, Minus, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  FileText,
+  Minus,
+  Pencil,
+  Plus,
+  RotateCcw,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
+import { type ChangeEvent, type SyntheticEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { sampleSections } from "../../shared/sample-data";
-import type { Counter, Project } from "../../shared/schemas";
+import type { Counter, CustomSection, Project } from "../../shared/schemas";
 import { Button } from "../components/button";
 import { Field, SelectInput, TextArea, TextInput } from "../components/field";
-import { createCounter, deleteCounter, deleteProject, getProject, listCounters, updateCounter, updateProject } from "../lib/api";
+import {
+  createCounter,
+  createSection,
+  deleteCounter,
+  deleteProject,
+  deleteProjectPhoto,
+  deleteSection,
+  getProject,
+  listCounters,
+  listSections,
+  updateCounter,
+  updateProject,
+  uploadProjectPhoto,
+} from "../lib/api";
 
 export function ProjectDetailPage() {
   const { projectId } = useParams();
@@ -13,10 +37,18 @@ export function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [counterError, setCounterError] = useState<string | null>(null);
+  const [sectionError, setSectionError] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [counters, setCounters] = useState<Counter[]>([]);
+  const [sections, setSections] = useState<CustomSection[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingCounter, setIsAddingCounter] = useState(false);
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  const [materialLabel, setMaterialLabel] = useState("");
+  const [materialValue, setMaterialValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!projectId) {
@@ -68,7 +100,32 @@ export function ProjectDetailPage() {
     };
   }, [projectId]);
 
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    listSections(projectId)
+      .then((response) => {
+        if (isMounted) {
+          setSections(response.sections);
+          setSectionError(null);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSectionError("Materials could not be loaded.");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  async function handleSave(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!project) {
@@ -120,7 +177,7 @@ export function ProjectDetailPage() {
     }
   }
 
-  async function handleAddCounter(event: FormEvent<HTMLFormElement>) {
+  async function handleAddCounter(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!project) {
@@ -166,44 +223,108 @@ export function ProjectDetailPage() {
     }
   }
 
+  async function handleAddMaterial() {
+    if (!project) return;
+
+    const title = materialLabel.trim();
+    const content = materialValue.trim();
+
+    if (!title) {
+      setSectionError("Label is required.");
+      return;
+    }
+
+    try {
+      const response = await createSection(project.id, { title, content });
+      setSections((current) => [...current, response.section]);
+      setIsAddingMaterial(false);
+      setMaterialLabel("");
+      setMaterialValue("");
+      setSectionError(null);
+    } catch {
+      setSectionError("Material could not be added.");
+    }
+  }
+
+  async function handleDeleteSection(section: CustomSection) {
+    try {
+      await deleteSection(section.id);
+      setSections((current) => current.filter((item) => item.id !== section.id));
+      setSectionError(null);
+    } catch {
+      setSectionError("Material could not be removed.");
+    }
+  }
+
+  async function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !project) return;
+
+    setIsUploadingPhoto(true);
+    setPhotoError(null);
+
+    try {
+      const response = await uploadProjectPhoto(project.id, file);
+      setProject(response.project);
+    } catch {
+      setPhotoError("Photo could not be uploaded.");
+    } finally {
+      setIsUploadingPhoto(false);
+      // Reset the input so same file can be re-selected
+      if (photoInputRef.current) {
+        photoInputRef.current.value = "";
+      }
+    }
+  }
+
+  async function handleDeletePhoto() {
+    if (!project) return;
+
+    try {
+      await deleteProjectPhoto(project.id);
+      setProject((prev) => (prev ? { ...prev, photoPath: undefined } : prev));
+      setPhotoError(null);
+    } catch {
+      setPhotoError("Photo could not be removed.");
+    }
+  }
+
   if (error && !project) {
     return (
-      <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
-        <Link className="inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--text)]" to="/">
+      <section className="rounded-lg border border-(--border) bg-(--shell) p-5">
+        <Link className="inline-flex items-center gap-2 text-sm text-(--muted) hover:text-(--text)" to="/">
           <ArrowLeft size={16} />
           Dashboard
         </Link>
-        <p className="mt-4 text-sm text-[var(--muted)]">{error}</p>
+        <p className="mt-4 text-sm text-(--muted)">{error}</p>
       </section>
     );
   }
 
   if (!project) {
     return (
-      <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5 text-sm text-[var(--muted)]">
+      <section className="rounded-lg border border-(--border) bg-(--shell) p-5 text-sm text-(--muted)">
         Loading project...
       </section>
     );
   }
 
-  const sections = sampleSections.filter((section) => section.projectId === project.id);
-
   return (
     <section className="space-y-6">
-      <header className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
-        <Link className="inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--text)]" to="/">
+      <header className="rounded-lg border border-(--border) bg-(--shell) p-5">
+        <Link className="inline-flex items-center gap-2 text-sm text-(--muted) hover:text-(--text)" to="/">
           <ArrowLeft size={16} />
           Dashboard
         </Link>
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-3xl font-semibold">{project.title}</h1>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <p className="mt-2 text-sm text-(--muted)">
               {project.status} · {project.hookSize ?? "Hook not set"} · {project.yarnType ?? "Yarn not set"}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => setIsEditing((value) => !value)}>
+            <Button onClick={() => { setIsEditing((value) => !value); setIsAddingMaterial(false); }}>
               <Pencil size={17} />
               {isEditing ? "Cancel edit" : "Edit project"}
             </Button>
@@ -216,13 +337,13 @@ export function ProjectDetailPage() {
       </header>
 
       {error ? (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)]">
+        <div className="rounded-lg border border-(--border) bg-(--surface-soft) p-4 text-sm text-(--muted)">
           {error}
         </div>
       ) : null}
 
       {isEditing ? (
-        <form className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5" onSubmit={handleSave}>
+        <form className="rounded-lg border border-(--border) bg-(--shell) p-5" onSubmit={handleSave}>
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Project title">
               <TextInput defaultValue={project.title} name="title" required />
@@ -256,7 +377,81 @@ export function ProjectDetailPage() {
               <TextArea defaultValue={project.notes} name="notes" />
             </Field>
           </div>
-          <div className="mt-4 flex justify-end">
+
+          {/* Custom materials inside edit form */}
+          <div className="mt-6 border-t border-(--border) pt-5">
+            <h3 className="mb-3 text-sm font-semibold">Custom materials</h3>
+            {sections.length > 0 ? (
+              <div className="mb-3 space-y-2">
+                {sections.map((section) => (
+                  <div className="flex items-center justify-between gap-3 rounded-md border border-(--border) bg-(--surface) px-3 py-2 text-sm" key={section.id}>
+                    <span className="text-(--muted)">{section.title}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">{section.content}</span>
+                      <button
+                        className="text-(--muted) opacity-60 hover:opacity-100"
+                        onClick={() => handleDeleteSection(section)}
+                        title={`Remove ${section.title}`}
+                        type="button"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            {sectionError ? <p className="mb-3 text-xs text-(--muted)">{sectionError}</p> : null}
+
+            {isAddingMaterial ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Label">
+                    <TextInput
+                      onChange={(e) => setMaterialLabel(e.target.value)}
+                      placeholder="Safety Eyes"
+                      value={materialLabel}
+                    />
+                  </Field>
+                  <Field label="Value">
+                    <TextInput
+                      onChange={(e) => setMaterialValue(e.target.value)}
+                      placeholder="8mm"
+                      value={materialValue}
+                    />
+                  </Field>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setIsAddingMaterial(false);
+                      setMaterialLabel("");
+                      setMaterialValue("");
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddMaterial} type="button" variant="primary">
+                    Add
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="flex items-center gap-1.5 text-xs text-(--muted) hover:text-(--text)"
+                onClick={() => setIsAddingMaterial(true)}
+                type="button"
+              >
+                <Plus size={13} />
+                Add material
+              </button>
+            )}
+          </div>
+
+          <div className="mt-5 flex justify-end">
             <Button disabled={isSaving} type="submit" variant="primary">
               {isSaving ? "Saving..." : "Save changes"}
             </Button>
@@ -266,12 +461,57 @@ export function ProjectDetailPage() {
 
       <div className="grid gap-4 lg:grid-cols-[22rem_1fr]">
         <aside className="space-y-4">
-          <div className="aspect-[4/3] rounded-lg border border-[var(--border)] bg-[var(--surface-strong)] p-4">
-            <div className="flex h-full items-end rounded-md border border-dashed border-[var(--border)] p-3 text-sm text-[var(--muted)]">
-              Project photo
-            </div>
+          {/* Project photo — square */}
+          <div className="aspect-square overflow-hidden rounded-lg border border-(--border) bg-(--surface-strong)">
+            {project.photoPath ? (
+              <div className="relative h-full w-full">
+                <img
+                  alt="Project photo"
+                  className="h-full w-full object-cover"
+                  src={`/api/projects/${project.id}/photo`}
+                />
+                <div className="absolute bottom-2 right-2 flex gap-1">
+                  <button
+                    className="rounded bg-(--surface-strong) px-2 py-1 text-xs text-(--muted) opacity-80 hover:opacity-100"
+                    onClick={() => photoInputRef.current?.click()}
+                    title="Replace photo"
+                    type="button"
+                  >
+                    Replace
+                  </button>
+                  <button
+                    className="rounded bg-(--surface-strong) px-2 py-1 text-xs text-(--muted) opacity-80 hover:opacity-100"
+                    onClick={handleDeletePhoto}
+                    title="Remove photo"
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="flex h-full w-full flex-col items-center justify-center gap-2 text-sm text-(--muted) transition-colors hover:text-(--text)"
+                disabled={isUploadingPhoto}
+                onClick={() => photoInputRef.current?.click()}
+                type="button"
+              >
+                <Upload size={20} />
+                {isUploadingPhoto ? "Uploading..." : "Upload photo"}
+              </button>
+            )}
           </div>
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+          <input
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={handlePhotoChange}
+            ref={photoInputRef}
+            type="file"
+          />
+          {photoError ? <p className="text-xs text-(--muted)">{photoError}</p> : null}
+
+          {/* Materials panel */}
+          <div className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <h2 className="text-base font-semibold">Materials</h2>
             <dl className="mt-4 space-y-3 text-sm">
               <DetailRow label="Yarn" value={project.yarnType} />
@@ -279,16 +519,19 @@ export function ProjectDetailPage() {
               <DetailRow label="Colors" value={project.colorsUsed} />
               <DetailRow label="Hook" value={project.hookSize} />
               <DetailRow label="Finished size" value={project.finishedSize} />
+              {sections.map((section) => (
+                <DetailRow key={section.id} label={section.title} value={section.content} />
+              ))}
             </dl>
           </div>
         </aside>
 
         <div className="space-y-4">
-          <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+          <section className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <h2 className="text-base font-semibold">Pattern</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">{project.pdfFilename ?? "No PDF attached yet."}</p>
+                <p className="mt-1 text-sm text-(--muted)">{project.pdfFilename ?? "No PDF attached yet."}</p>
               </div>
               <div className="flex gap-2">
                 <Button>
@@ -303,7 +546,7 @@ export function ProjectDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+          <section className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Counters</h2>
               <Button onClick={() => setIsAddingCounter((value) => !value)} variant="ghost">
@@ -312,10 +555,10 @@ export function ProjectDetailPage() {
               </Button>
             </div>
 
-            {counterError ? <p className="mt-3 text-sm text-[var(--muted)]">{counterError}</p> : null}
+            {counterError ? <p className="mt-3 text-sm text-(--muted)">{counterError}</p> : null}
 
             {isAddingCounter ? (
-              <form className="mt-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-4" onSubmit={handleAddCounter}>
+              <form className="mt-4 rounded-md border border-(--border) bg-(--surface) p-4" onSubmit={handleAddCounter}>
                 <div className="grid gap-3 md:grid-cols-2">
                   <Field label="Counter name">
                     <TextInput name="name" placeholder="Body" required />
@@ -348,28 +591,28 @@ export function ProjectDetailPage() {
 
             <div className="mt-4 space-y-3">
               {counters.length === 0 ? (
-                <div className="rounded-md border border-dashed border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)]">
+                <div className="rounded-md border border-dashed border-(--border) bg-(--surface-soft) p-4 text-sm text-(--muted)">
                   No counters yet. Add one for the row or round you are working on.
                 </div>
               ) : null}
               {counters.map((counter) => (
-                <div className="grid gap-3 rounded-md border border-[var(--border)] bg-[var(--surface)] p-3 md:grid-cols-[1fr_auto]" key={counter.id}>
+                <div className="grid gap-3 rounded-md border border-(--border) bg-(--surface) p-3 md:grid-cols-[1fr_auto]" key={counter.id}>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-medium">{counter.name}</p>
                       {counter.isCompleted ? (
-                        <span className="rounded bg-[var(--chip)] px-2 py-1 text-xs text-[var(--accent-purple)]">Complete</span>
+                        <span className="rounded bg-(--chip) px-2 py-1 text-xs text-(--accent-purple)">Complete</span>
                       ) : null}
                     </div>
-                    <p className="mt-1 text-sm text-[var(--muted)]">
+                    <p className="mt-1 text-sm text-(--muted)">
                       {counter.type === "round" ? "Round" : "Row"} {counter.currentValue}
                       {counter.targetValue ? ` / ${counter.targetValue}` : ""}
                     </p>
-                    {counter.notes ? <p className="mt-2 text-sm text-[var(--muted)]">{counter.notes}</p> : null}
+                    {counter.notes ? <p className="mt-2 text-sm text-(--muted)">{counter.notes}</p> : null}
                   </div>
                   <div className="grid grid-cols-5 gap-2">
                     <button
-                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)]"
+                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--text)"
                       type="button"
                       title="Decrement"
                       onClick={() => patchCounter(counter, { currentValue: Math.max(0, counter.currentValue - 1), isCompleted: false })}
@@ -377,7 +620,7 @@ export function ProjectDetailPage() {
                       <Minus className="mx-auto" size={18} />
                     </button>
                     <button
-                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--accent-pink)] text-[var(--button-text)]"
+                      className="h-11 w-12 rounded-md border border-(--border) bg-(--accent-pink) text-(--button-text)"
                       type="button"
                       title="Increment"
                       onClick={() => patchCounter(counter, { currentValue: counter.currentValue + 1 })}
@@ -385,7 +628,7 @@ export function ProjectDetailPage() {
                       <Plus className="mx-auto" size={18} />
                     </button>
                     <button
-                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
                       type="button"
                       title="Reset"
                       onClick={() => patchCounter(counter, { currentValue: 0, isCompleted: false })}
@@ -393,7 +636,7 @@ export function ProjectDetailPage() {
                       <RotateCcw className="mx-auto" size={17} />
                     </button>
                     <button
-                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
                       type="button"
                       title="Toggle complete"
                       onClick={() => patchCounter(counter, { isCompleted: !counter.isCompleted })}
@@ -401,7 +644,7 @@ export function ProjectDetailPage() {
                       <CheckCircle2 className="mx-auto" size={17} />
                     </button>
                     <button
-                      className="h-11 w-12 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--muted)]"
+                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
                       type="button"
                       title="Delete counter"
                       onClick={() => handleDeleteCounter(counter)}
@@ -414,21 +657,9 @@ export function ProjectDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
-            <h2 className="text-base font-semibold">Custom sections</h2>
-            <div className="mt-4 space-y-3">
-              {sections.map((section) => (
-                <article className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-4" key={section.id}>
-                  <h3 className="font-medium">{section.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{section.content}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+          <section className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <h2 className="text-base font-semibold">Notes</h2>
-            <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{project.notes ?? "No notes yet."}</p>
+            <p className="mt-3 text-sm leading-6 text-(--muted)">{project.notes ?? "No notes yet."}</p>
           </section>
         </div>
       </div>
@@ -453,8 +684,8 @@ function numberFromForm(value: FormDataEntryValue | null, fallback: number) {
 
 function DetailRow({ label, value }: { label: string; value?: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-3 last:border-0 last:pb-0">
-      <dt className="text-[var(--muted)]">{label}</dt>
+    <div className="flex items-center justify-between gap-3 border-b border-(--border) pb-3 last:border-0 last:pb-0">
+      <dt className="text-(--muted)">{label}</dt>
       <dd className="text-right font-medium">{value ?? "Not set"}</dd>
     </div>
   );

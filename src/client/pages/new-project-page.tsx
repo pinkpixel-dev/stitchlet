@@ -1,5 +1,5 @@
 import { ArrowLeft, Save } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type SyntheticEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/button";
 import { Field, SelectInput, TextArea, TextInput } from "../components/field";
@@ -10,7 +10,7 @@ export function NewProjectPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSaving(true);
     setError(null);
@@ -38,14 +38,14 @@ export function NewProjectPage() {
 
   return (
     <section className="space-y-6">
-      <header className="flex flex-col gap-4 rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 rounded-lg border border-(--border) bg-(--shell) p-5 md:flex-row md:items-center md:justify-between">
         <div>
-          <Link className="inline-flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--text)]" to="/">
+          <Link className="inline-flex items-center gap-2 text-sm text-(--muted) hover:text-(--text)" to="/">
             <ArrowLeft size={16} />
             Dashboard
           </Link>
           <h1 className="mt-3 text-3xl font-semibold">Create project</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-(--muted)">
             Save the core project details to your local Stitchlet database.
           </p>
         </div>
@@ -56,13 +56,13 @@ export function NewProjectPage() {
       </header>
 
       {error ? (
-        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm text-[var(--muted)]">
+        <div className="rounded-lg border border-(--border) bg-(--surface-soft) p-4 text-sm text-(--muted)">
           {error}
         </div>
       ) : null}
 
       <form className="grid gap-4 lg:grid-cols-[1fr_20rem]" id="new-project-form" onSubmit={handleSubmit}>
-        <div className="space-y-4 rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+        <div className="space-y-4 rounded-lg border border-(--border) bg-(--shell) p-5">
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="Project title">
               <TextInput name="title" placeholder="Strawberry Bunny" required />
@@ -97,18 +97,18 @@ export function NewProjectPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--shell)] p-5">
+          <div className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <h2 className="text-base font-semibold">Files</h2>
             <div className="mt-4 space-y-3">
-              <button className="w-full rounded-md border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-6 text-sm text-[var(--muted)] transition hover:border-[var(--accent-pink)] hover:text-[var(--text)]" type="button">
+              <button className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-pink) hover:text-(--text)" type="button">
                 Add main photo
               </button>
-              <button className="w-full rounded-md border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-6 text-sm text-[var(--muted)] transition hover:border-[var(--accent-purple)] hover:text-[var(--text)]" type="button">
+              <button className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-purple) hover:text-(--text)" type="button">
                 Add pattern PDF
               </button>
             </div>
           </div>
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-soft)] p-4 text-sm leading-6 text-[var(--muted)]">
+          <div className="rounded-lg border border-(--border) bg-(--surface-soft) p-4 text-sm leading-6 text-(--muted)">
             Phase 1 keeps file controls visual only. Upload handling gets wired when photos and PDFs are implemented.
           </div>
         </aside>

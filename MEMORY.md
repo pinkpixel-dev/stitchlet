@@ -72,3 +72,43 @@ What was rejected and why:
 
 - Duplicate/reorder controls were rejected for this slice because add/update/delete covers the core counter workflow with less UI complexity.
 - A richer counter editor was rejected because simple mobile-friendly controls matter more for the first usable pass.
+
+### Decision: Use custom_sections table for custom material entries in the Materials panel
+
+What was decided:
+
+- Reuse the existing `custom_sections` SQLite table (title + content) for custom material entries.
+- Surface them inline inside the Materials panel rather than as a separate "Custom sections" section.
+- Add a small inline `+` form with a label + value field. Each entry shows an `×` remove button.
+- Remove the separate "Custom sections" card from the project detail page.
+
+Why:
+
+- The existing data model already maps perfectly to the requested UX (label = title, value = content).
+- One fewer UI section is simpler and keeps the materials panel cohesive.
+
+What was rejected and why:
+
+- A separate materials table was rejected because `custom_sections` already has exactly the right shape.
+- Inline editing (click to edit an existing entry) was deferred — add and remove covers the first useful pass.
+
+### Decision: Store photos on local filesystem, serve via API route
+
+What was decided:
+
+- Upload photos to `uploads/projects/<id>/photo.<ext>` on the local filesystem.
+- Serve photos through `GET /api/projects/:id/photo` (streams the file).
+- Display photos with `aspect-square` + `object-fit: cover` for square display via CSS.
+- No image processing library (no Sharp). Raw file saved as uploaded.
+
+Why:
+
+- Consistent with the plan document's storage model.
+- Portable: works from local dev, NAS, or Docker with a mounted uploads volume.
+- API-served photos work correctly when accessed from another device on the network.
+- No extra dependencies needed for MVP.
+
+What was rejected and why:
+
+- Sharp/image processing was deferred — square crop is CSS for now, server-side resize is a future slice.
+- Serving photos as static files directly was rejected because API routing handles auth, NAS portability, and future signed URL support better.
