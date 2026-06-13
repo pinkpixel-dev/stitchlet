@@ -13,3 +13,5 @@ output/playwright/
 !data/.gitkeep
 !uploads/.gitkeep
 !backups/.gitkeep
+DOCKER.md
+stitchlet-self-hosted-plan.md

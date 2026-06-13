@@ -99,5 +99,5 @@ Photos are saved to the local filesystem and served through `/api/projects/:id/p
 
 1. Show project photo thumbnails on dashboard cards. ✅
 2. Add migration generation workflow around the current SQLite initializer.
-3. Add Docker deployment files.
-4. Add PWA manifest and offline shell.
+3. Add Docker deployment files. ✅
+4. Add PWA manifest and offline shell. ✅

@@ -154,23 +154,44 @@ What was decided:
 Why:
 - Standard for small-scale self-hosted instances. Client-side state offers instant filtering and sorting for an exceptionally snappy user experience.
 
+### Decision: Implement custom PWA service worker dynamic caching with Network-First assets strategy
+
+What was decided:
+- Create a standard service worker (`sw.js`) utilizing a Network-First cache strategy for web requests, falling back to cache when offline.
+- Explicitly exclude `/api/` endpoints and non-GET requests from service worker caching to prevent caching stale database query responses.
+- Load the service worker dynamically in production environment context (`import.meta.env.PROD`) inside `main.tsx` to prevent caching during active dev/HMR.
+
+Why:
+- A Network-First strategy ensures users see updates immediately when connected (such as new project details or photos), while providing reliable app shell functionality offline.
+
+### Decision: Multi-stage node docker container with system zip/unzip dependencies
+
+What was decided:
+- Create a standard `Dockerfile` that packages Node.js v22 and installs system `zip`/`unzip` tools via apk to support settings backup/restore.
+- Expose production port `6497` and launch using `npm start`.
+- Configure `docker-compose.yml` to define persistent host-bind mounts for `./data` (SQLite database), `./uploads` (patterns and photos), and `./backups` (exported archives).
+
+Why:
+- Restoring settings backup archives requires system `zip` and `unzip` tools to be installed within the Docker runtime context. Mount volumes keep user-uploaded assets and project records persistent across container updates.
+
 ### Session end: 2026-06-13
 
 Worked on:
-- Backend backup and restore endpoints (`/api/system/backup` & `/api/system/restore`).
-- Settings page UI refresh (sections for Appearance, Backup & Restore, and Self-hosted info).
-- Client-side search, status filters, and sorting controls for the projects dashboard.
-- System integration tests in Vitest.
+- Production Docker containerization (`Dockerfile` and `docker-compose.yml`).
+- PWA manifest configuration (`site.webmanifest`) and responsive icons generation using ImageMagick.
+- Service worker implementation (`sw.js`) and dynamic production registration.
+- Decoupled server database dependencies to resolve Hono router type compiler check errors.
+- Documented self-hosted Docker deployment commands and volume guides in `README.md`.
 
 Completed:
-- Settings backup & restore workflow end-to-end.
-- Dashboard filtering, searching, and sorting functionality.
-- Server app dependencies refactoring to inject sqlite instance for easy test mocking.
+- PWA installability and offline assets capabilities.
+- Production containerized Docker compose setup.
+- App type verification checking and testing suite pass.
 
 Decisions made:
-- Rely on system `zip` and `unzip` tools directly since they are standard on Linux hosting.
-- Exit process upon restore to trigger supervisor restarts.
+- Exclude live database `/api/` query endpoints from service worker caching.
+- Build Docker container using Node-alpine with apk system zip tools installed.
 
 Next session priorities:
-- Setup Docker files and compose configurations for deployment.
-- PWA setup and manifest file.
+- Setup automated database migration generation around the SQLite initializer.
+- Add remote access guidelines (Caddy reverse proxy and Tailscale configurations).

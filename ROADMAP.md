@@ -65,15 +65,19 @@ Status: add and remove implemented. Entries persist to the `custom_sections` tab
 
 ## Phase 7: Self-Hosted Deployment
 
-- Dockerfile
-- `docker-compose.yml`
-- Persistent data/uploads/backups folders
-- NAS-friendly setup docs
+- Dockerfile (implemented)
+- `docker-compose.yml` (implemented)
+- Persistent data/uploads/backups folders (configured)
+- NAS-friendly setup docs (written in README.md)
+
+Status: fully implemented.
 
 ## Phase 8: PWA Polish and Backups
 
-- Web app manifest
-- Offline shell
-- Installable icon support
+- Web app manifest (site.webmanifest implemented)
+- Offline shell (Service Worker dynamic cache implemented)
+- Installable icon support (generated sizes via ImageMagick)
 - Backup script (implemented via zip/unzip system routes)
 - In-app export and restore (implemented on settings page)
+
+Status: fully implemented.

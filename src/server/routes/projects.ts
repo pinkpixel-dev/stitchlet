@@ -11,7 +11,7 @@ import { createProjectSectionRoutes } from "./sections";
 
 const uploadsRoot = fileURLToPath(new URL("../../../uploads", import.meta.url));
 
-export function createProjectRoutes({ db }: Required<AppDependencies>) {
+export function createProjectRoutes({ db }: { db: NonNullable<AppDependencies["db"]> }) {
   const projectRoutes = new Hono();
   const projects = createProjectRepository(db);
 

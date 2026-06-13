@@ -66,10 +66,10 @@ src/
 Implemented:
 
 - Minimal dark/light app shell with dotted grid background
-- Dashboard route with live project data
+- Dashboard route with live project data, reactive search, status filtering, and sorting
 - Create project route
 - Project detail route
-- Settings route
+- Settings route with database and media backup export/restore controls
 - Shared project/counter/custom section schemas
 - Drizzle SQLite schema
 - Hono API
@@ -80,12 +80,36 @@ Implemented:
 - Dashboard list/grid view toggle
 - Custom material entries (add/remove) — stored in `custom_sections` table
 - PDF upload, inline viewer (iframe modal), and download — stored locally, served via API
+- PWA installability and dynamic offline-first asset caching (via Service Worker)
+- Production Docker containerization and Docker Compose configurations
 
-Not implemented yet:
+## Docker Deployment
 
-- Auth
-- Docker deployment
-- PWA install/offline behavior
+Stitchlet is designed to run self-hosted on your NAS, mini-PC, or home server.
+
+Deploy via Docker Compose:
+
+```bash
+docker compose up -d --build
+```
+
+Access the application on:
+
+```txt
+http://localhost:6497
+```
+
+### Mounted Volumes
+
+Docker Compose creates three bind mounts on the host to persist your data:
+
+- `./data/` -> Contains the SQLite database file (`stitchlet.db`).
+- `./uploads/` -> Contains project-specific pattern PDFs and photos.
+- `./backups/` -> Destination folder for settings backups.
+
+## PWA & Installability
+
+Stitchlet includes a web app manifest and a dynamic service worker. To install as a PWA, run Stitchlet over `localhost` or deploy behind an HTTPS reverse proxy (such as Caddy or Tailscale Serve).
 
 ## Theme
 

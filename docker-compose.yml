@@ -1,0 +1,14 @@
+services:
+  stitchlet:
+    build: .
+    container_name: stitchlet
+    ports:
+      - "6497:6497"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    environment:
+      - NODE_ENV=production
+      - PORT=6497
+    restart: unless-stopped

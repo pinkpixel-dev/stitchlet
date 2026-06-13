@@ -2,6 +2,9 @@
 
 ## 2026-06-13
 
+- Added multi-stage production Dockerfile and Docker Compose configurations supporting persistent bind mounts for app data, uploaded files, and backups.
+- Integrated progressive web application (PWA) configuration: created web app manifest (`site.webmanifest`), generated full multi-resolution icon assets using ImageMagick, and registered an offline-capable Service Worker (`sw.js`) utilizing a Network-First caching strategy.
+- Fixed backend route factory type signatures to decouple unrelated SQLite configuration imports, resolving compiler errors.
 - Added backup export and import/restore capability to Settings. Users can download a ZIP file of the database and media folder, or restore an archive to overwrite local data and trigger a server reboot.
 - Implemented `/api/system/backup` and `/api/system/restore` backend routes utilizing SQLite backup APIs and native zip/unzip commands.
 - Wired the dashboard search, status filters, and sorting dropdowns to dynamically filter and sort projects client-side with visual empty states.

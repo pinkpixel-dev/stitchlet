@@ -4,7 +4,7 @@ import type { AppDependencies } from "../app";
 import { createProjectRepository } from "../services/projects";
 import { createSectionRepository } from "../services/sections";
 
-export function createSectionRoutes({ db }: Required<AppDependencies>) {
+export function createSectionRoutes({ db }: { db: NonNullable<AppDependencies["db"]> }) {
   const sectionRoutes = new Hono();
   const sections = createSectionRepository(db);
 
@@ -38,7 +38,7 @@ export function createSectionRoutes({ db }: Required<AppDependencies>) {
   return sectionRoutes;
 }
 
-export function createProjectSectionRoutes({ db }: Required<AppDependencies>) {
+export function createProjectSectionRoutes({ db }: { db: NonNullable<AppDependencies["db"]> }) {
   const projectSectionRoutes = new Hono();
   const sections = createSectionRepository(db);
   const projects = createProjectRepository(db);

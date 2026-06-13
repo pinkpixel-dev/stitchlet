@@ -4,7 +4,7 @@ import type { AppDependencies } from "../app";
 import { createCounterRepository } from "../services/counters";
 import { createProjectRepository } from "../services/projects";
 
-export function createCounterRoutes({ db }: Required<AppDependencies>) {
+export function createCounterRoutes({ db }: { db: NonNullable<AppDependencies["db"]> }) {
   const counterRoutes = new Hono();
   const counters = createCounterRepository(db);
 
@@ -38,7 +38,7 @@ export function createCounterRoutes({ db }: Required<AppDependencies>) {
   return counterRoutes;
 }
 
-export function createProjectCounterRoutes({ db }: Required<AppDependencies>) {
+export function createProjectCounterRoutes({ db }: { db: NonNullable<AppDependencies["db"]> }) {
   const projectCounterRoutes = new Hono();
   const counters = createCounterRepository(db);
   const projects = createProjectRepository(db);
