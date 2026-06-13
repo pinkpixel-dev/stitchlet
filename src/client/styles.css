@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg: #121212;
+  --shell: #181818;
+  --surface: #202020;
+  --surface-strong: #282428;
+  --surface-soft: rgba(252, 158, 177, 0.05);
+  --text: #f7f7f7;
+  --muted: #a8a4ab;
+  --border: #2f2f2f;
+  --chip: rgba(208, 156, 222, 0.12);
+  --dot: rgba(252, 158, 177, 0.09);
+  --accent-pink: #fc9eb1;
+  --accent-purple: #d09cde;
+  --button-text: #221217;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fef4e8;
+  --shell: #fff9f1;
+  --surface: #fffdf9;
+  --surface-strong: #f8eadf;
+  --surface-soft: rgba(242, 117, 147, 0.08);
+  --text: #21191f;
+  --muted: #74636e;
+  --border: #ead8cb;
+  --chip: rgba(144, 88, 164, 0.12);
+  --dot: rgba(144, 88, 164, 0.12);
+  --accent-pink: #f27593;
+  --accent-purple: #9058a4;
+  --button-text: #fffdf9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-pink);
+  outline-offset: 2px;
+}

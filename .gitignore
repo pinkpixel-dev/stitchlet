@@ -1,0 +1,15 @@
+node_modules/
+dist/
+drizzle/
+data/*.db
+data/*.db-*
+uploads/*
+backups/*
+.playwright-cli/
+output/playwright/
+.env
+.DS_Store
+
+!data/.gitkeep
+!uploads/.gitkeep
+!backups/.gitkeep

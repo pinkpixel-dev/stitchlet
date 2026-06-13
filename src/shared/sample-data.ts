@@ -1,0 +1,107 @@
+import type { Counter, CustomSection, Project } from "./schemas";
+
+const now = "2026-06-12T12:00:00.000Z";
+
+export const sampleProjects: Project[] = [
+  {
+    id: "strawberry-bunny",
+    title: "Strawberry Bunny",
+    status: "active",
+    yarnType: "Premier Parfait Chunky",
+    yarnWeight: "6 super bulky",
+    colorsUsed: "pink, cream, green",
+    hookSize: "4.0mm",
+    finishedSize: "10 inches",
+    notes: "Make ears slightly shorter next time.",
+    pdfFilename: "strawberry-bunny-pattern.pdf",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "market-tote",
+    title: "Market Tote",
+    status: "paused",
+    yarnType: "Cotton blend",
+    yarnWeight: "4 worsted",
+    colorsUsed: "oat, rose",
+    hookSize: "5.0mm",
+    finishedSize: "14 x 15 inches",
+    notes: "Paused until more yarn arrives.",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "lavender-cardigan",
+    title: "Lavender Cardigan",
+    status: "finished",
+    yarnType: "Merino wool",
+    yarnWeight: "3 DK",
+    colorsUsed: "lavender",
+    hookSize: "4.5mm",
+    finishedSize: "medium",
+    notes: "Block sleeves a touch wider next time.",
+    pdfFilename: "cardigan-notes.pdf",
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
+export const sampleCounters: Counter[] = [
+  {
+    id: "body-counter",
+    projectId: "strawberry-bunny",
+    name: "Body",
+    type: "round",
+    currentValue: 18,
+    targetValue: 32,
+    isCompleted: false,
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "head-counter",
+    projectId: "strawberry-bunny",
+    name: "Head",
+    type: "round",
+    currentValue: 10,
+    targetValue: 24,
+    isCompleted: false,
+    sortOrder: 1,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "border-counter",
+    projectId: "market-tote",
+    name: "Border",
+    type: "row",
+    currentValue: 6,
+    targetValue: 10,
+    isCompleted: false,
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  },
+];
+
+export const sampleSections: CustomSection[] = [
+  {
+    id: "safety-eyes",
+    projectId: "strawberry-bunny",
+    title: "Safety Eyes",
+    content: "12mm black safety eyes, placed between rounds 14 and 15.",
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "assembly",
+    projectId: "strawberry-bunny",
+    title: "Assembly Notes",
+    content: "Pin ears before sewing so the strawberry cap still sits flat.",
+    sortOrder: 1,
+    createdAt: now,
+    updatedAt: now,
+  },
+];

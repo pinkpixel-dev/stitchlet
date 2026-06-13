@@ -1,0 +1,46 @@
+{
+  "name": "stitchlet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n web,api \"npm:dev:web\" \"npm:dev:server\"",
+    "dev:web": "vite --host 0.0.0.0 --port 6497",
+    "dev:server": "PORT=6498 tsx watch src/server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 6497",
+    "start": "PORT=6497 tsx src/server/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.0.4",
+    "better-sqlite3": "12.10.0",
+    "dotenv": "17.4.2",
+    "drizzle-orm": "0.45.2",
+    "hono": "4.12.25",
+    "lucide-react": "1.18.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-router-dom": "7.17.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.1",
+    "@types/better-sqlite3": "7.6.13",
+    "@types/node": "25.9.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "concurrently": "10.0.3",
+    "drizzle-kit": "0.31.10",
+    "tailwindcss": "4.3.1",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3",
+    "vite": "8.0.16"
+  },
+  "overrides": {
+    "esbuild": "0.28.1"
+  }
+}
