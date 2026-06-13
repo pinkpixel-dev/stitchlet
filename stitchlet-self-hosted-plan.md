@@ -8,6 +8,11 @@ A self-hosted crochet companion app for people who want to run their own private
 **Dark mode:** Background: Dark Gray #121212, Accent Colors: Pink #FC9EB1 Purple, #D09CDE
 **Light mode:** Background: Cream #FEF4E8, Accent Colors: Pink #F27593, Purple #9058A4
 
+### Images
+public/logo.png - use within the application and on the README.md
+public/icon.png - use to create icons for binaries
+public/favicon.png - app favicon.
+
 ## 1. App summary
 
 Stitchlet is a simple self-hosted crochet project companion.
