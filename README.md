@@ -4,36 +4,45 @@
 
 # Stitchlet
 
-Stitchlet is a private, self-hosted crochet project companion designed to run on your own hardware (mini-PC, NAS, home server, or local computer). It keeps all of your pattern PDFs, progress photos, stitch counters, and notes local, cozy, and completely under your control. No surprise cloud subscriptions, no telemetry, just your projects.
+Stitchlet is a self-hosted crochet project tracker. It keeps your pattern PDFs, progress photos, stitch/row counters, and material notes together in one place, on hardware you control — a mini-PC, a NAS, a home server, or just your own machine. No account, no subscription, no third-party server holding your project library.
+
+I made this because my own crochet projects were scattered across printed patterns, PDFs, photos in random folders, and notes on paper. Stitchlet is basically the tool I wanted for keeping all of that in one spot while I'm actually sitting there with yarn in my hands.
 
 <p align="center">
-  <img src="./screenshots/screenshot1.png" alt="Stitchlet Dashboard" width="48%" />
-  <img src="./screenshots/screenshot2.png" alt="Stitchlet Project Details" width="48%" />
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1783749207/screenshot1_yw4ef2.png" alt="Stitchlet Dashboard" width="48%" />
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1783749206/screenshot2_eq9788.png" alt="Stitchlet Project Details" width="48%" />
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1783749207/screenshot3_l2helt.png" alt="Stitchlet Edit Project Page" width="48%" />
+  <img src="https://res.cloudinary.com/di7ctlowx/image/upload/v1783749207/screenshot4_wwyqvi.png" alt="Stitchlet PDF View" width="48%" />
 </p>
 
-## Core Features
+## Features
 
-* 📱 **Cozy, Responsive UI** – Sleek charcoal-themed dashboard with grid and list views, optimized for both desktop monitors and amigurumi-friendly mobile screens.
-* 🔍 **Smart Dashboard** – Reactive searching, status filtering (Active, Paused, Finished, Frogged), and sorting (updated date, project title, status) to organize large libraries instantly.
-* 📄 **In-App PDF Viewer** – Upload pattern PDFs, view them in an embedded full-screen modal directly inside your project page, or download them at any time.
-* 📸 **Progress Photos** – Keep visual records of your work. Upload and replace cover photos with responsive, square CSS crops.
-* ⏱️ **Active Counters** – Add multiple round or row counters per project with custom names, target values, completion states, and large tap targets designed to be used while actively crocheting.
-* 🧶 **Material Checklists** – Quick metadata fields for yarn type, yarn weight, hook size, colors, and finished dimensions, plus custom list sections for assembly details and yarn substitutions.
-* 💾 **One-Click Backup & Restore** – Download a compressed ZIP archive containing your SQLite database and all uploaded media files directly from the UI settings.
-* 📶 **Progressive Web App (PWA)** – Installable as a standalone app with Network-First Service Worker asset caching, allowing the app shell to launch instantly and work offline.
+- Dashboard with search, status filtering (Active, Paused, Finished, Frogged), sorting by updated date/title/status, and grid or list view
+- Upload pattern PDFs and view them in an in-app viewer, or download them
+- Upload a project photo, with a replace/remove option
+- Multiple row or round counters per project, each with a name, target value, and completion state
+- Material fields for yarn type, yarn weight, hook size, colors, and finished size, plus custom key/value sections for anything else (safety eyes, stuffing, substitutions, etc.)
+- Export a backup ZIP (SQLite database + all uploaded media) from Settings, and restore from one later
+- Installable as a PWA, with a service worker that caches the app shell for offline use
 
----
+## Running with Docker Compose
 
-## Deploying with Docker Compose (Recommended)
+This is the easiest way to run Stitchlet on a NAS or home server.
 
-Docker is the easiest way to deploy Stitchlet on a home server or NAS (such as Unraid, Synology, or TrueNAS). 
+Clone the repo and run:
 
-Create a `docker-compose.yml` file:
+```bash
+git clone https://github.com/pinkpixel-dev/stitchlet.git
+cd stitchlet
+docker compose up -d
+```
+
+The included `docker-compose.yml` builds the image from source:
 
 ```yaml
 services:
   stitchlet:
-    image: pinkpixeldev/stitchlet:latest
+    build: .
     container_name: stitchlet
     ports:
       - "6497:6497"
@@ -47,76 +56,52 @@ services:
     restart: unless-stopped
 ```
 
-Run the container:
+Open `http://localhost:6497`.
+
+Two folders get created next to the compose file to hold your data outside the container:
+
+- `data/` — the SQLite database (`stitchlet.db`)
+- `uploads/` — pattern PDFs and photos
+
+(`backups/` is mounted too, but nothing writes to it yet — exported backups currently stream straight to your browser as a download instead of landing in that folder. Treat it as reserved for now.)
+
+If you'd rather build and push your own image instead of building on the host, see [DOCKER.md](./DOCKER.md) for the manual `docker build` / `docker push` steps.
+
+## Running locally
+
+**Prerequisites:** Node.js (the Docker image is built on Node 22; that's the version I'd stick to for local dev too — nothing else has been tested).
 
 ```bash
-docker compose up -d
+npm install
+npm run dev
 ```
 
-Open your browser and navigate to:
+This runs Vite and the Hono API concurrently. Vite serves the frontend on `6497` and proxies `/api` requests to the API on `6498`. Open `http://localhost:6497`.
 
-```txt
-http://localhost:6497
-```
+## Configuration
 
-### Mounted Volumes
+Two environment variables matter:
 
-Three folders are created in your compose directory to persist all library data outside the container:
-* `data/` – Houses your SQLite database file (`stitchlet.db`).
-* `uploads/` – Stores pattern PDFs and progress photos.
-* `backups/` – Temporary staging directory for exported archives.
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `PORT` | `6497` | Port the production server listens on |
+| `DATABASE_URL` | `./data/stitchlet.db` | Path to the SQLite database file |
 
----
+## PWA & remote access
 
-## Local Development & Setup
+Browsers only allow full PWA install over `localhost` or HTTPS, so how you access Stitchlet affects what you get:
 
-If you prefer to run Stitchlet natively on your machine:
+- **On your home network**: hit the host's LAN IP directly, e.g. `http://192.168.1.50:6497`.
+- **From outside your network**: Tailscale is the easiest option — run `tailscale serve` on the host and you get HTTPS inside your own tailnet without opening any ports on your router.
+- **On a domain**: put a reverse proxy like Caddy in front of it for TLS.
 
-### Prerequisites
+Stitchlet has no login system or user accounts. There's nothing checking who's asking before it serves a project photo, PDF, or the database backup route. "Private" here means you control where it's reachable from, not that it authenticates requests. Keep it on your LAN, or put it behind Tailscale or a reverse proxy that handles auth, rather than exposing the container directly to the internet.
 
-* Node.js v22+
-* npm
+## Backups
 
-### Running the App
-
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-2. Start the development environment (runs Vite and Hono concurrently):
-   ```bash
-   npm run dev
-   ```
-
-3. Open:
-   ```txt
-   http://localhost:6497
-   ```
-
-The Vite development server hosts the frontend on port `6497` and proxies backend API calls to Hono on port `6498`.
-
----
-
-## PWA & Private Remote Access
-
-For full PWA installability, browsers require that the app is accessed over `localhost` or served via HTTPS:
-
-1. **Home Wi-Fi only**: Access Stitchlet on your local network using the host IP (e.g. `http://192.168.1.50:6497`).
-2. **Private Remote Access (Tailscale)**: If you want to use your counters and view patterns while away from home, Tailscale is recommended. Run `tailscale serve` on your host to securely route HTTPS traffic within your private tailnet without opening router ports.
-3. **Domain Routing**: Use a reverse proxy like Caddy to configure SSL certificates for your host domain.
-
----
-
-## Backing Up Your Library
-
-Because Stitchlet is private and local, you are in charge of your data. 
-
-1. **Via UI Settings**: Navigate to **Settings > Backup & Restore** and click **Export Backup**. This will compile a zip file of your SQLite database and all uploaded project media.
-2. **Restoring**: Choose the exported ZIP file inside settings. Stitchlet will automatically unpack the files, close existing SQLite connections, overwrite files, and trigger a server reboot sequence.
-3. **Automated Host Backups**: Simply back up the mounted `./data` and `./uploads` directories using your home server's backup scheduler.
-
----
+- **Export**: Settings → Backup & Restore → Export Backup. This zips the SQLite database and everything in `uploads/` and downloads it straight to your browser.
+- **Restore**: pick a previously exported ZIP in Settings. The server closes its database connection, deletes the current database and `uploads/` folder, unpacks the ZIP over them, and then exits the process. It comes back up because of the container's `restart: unless-stopped` policy (or your process manager, if you're running it outside Docker) — there's no restart logic inside the app itself, so make sure whatever you're running it under will actually relaunch it.
+- **Host-level backups**: you can also just back up the mounted `./data` and `./uploads` folders directly with whatever backup tool your server already uses.
 
 ## License
 
