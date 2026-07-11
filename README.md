@@ -25,6 +25,8 @@ I made this because my own crochet projects were scattered across printed patter
 - Export a backup ZIP (SQLite database + all uploaded media) from Settings, and restore from one later
 - Installable as a PWA, with a service worker that caches the app shell for offline use
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/lVJtfcqPZiA?si=iIlWMAHill_t1Tti" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Running with Docker Compose
 
 This is the easiest way to run Stitchlet on a NAS or home server.
