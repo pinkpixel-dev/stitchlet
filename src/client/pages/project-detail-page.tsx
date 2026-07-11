@@ -506,7 +506,7 @@ export function ProjectDetailPage() {
                 <img
                   alt="Project photo"
                   className="h-full w-full object-cover"
-                  src={`/api/projects/${project.id}/photo`}
+                  src={`/api/projects/${project.id}/photo?v=${encodeURIComponent(project.updatedAt)}`}
                 />
                 <div className="absolute bottom-2 right-2 flex gap-1">
                   <button

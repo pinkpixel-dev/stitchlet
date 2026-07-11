@@ -1,14 +1,32 @@
-import { ArrowLeft, Save } from "lucide-react";
-import { type SyntheticEvent, useState } from "react";
+import { ArrowLeft, FileText, Image as ImageIcon, Save, X } from "lucide-react";
+import { type ChangeEvent, type SyntheticEvent, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/button";
 import { Field, SelectInput, TextArea, TextInput } from "../components/field";
-import { createProject } from "../lib/api";
+import { createProject, uploadProjectPdf, uploadProjectPhoto } from "../lib/api";
 
 export function NewProjectPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      setPhotoFile(file);
+    }
+  }
+
+  function handlePdfChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      setPdfFile(file);
+    }
+  }
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,7 +47,16 @@ export function NewProjectPage() {
 
     try {
       const response = await createProject(payload);
-      navigate(`/projects/${response.project.id}`);
+      const projectId = response.project.id;
+
+      if (photoFile) {
+        await uploadProjectPhoto(projectId, photoFile);
+      }
+      if (pdfFile) {
+        await uploadProjectPdf(projectId, pdfFile);
+      }
+
+      navigate(`/projects/${projectId}`);
     } catch {
       setError("Project could not be saved.");
       setIsSaving(false);
@@ -100,16 +127,72 @@ export function NewProjectPage() {
           <div className="rounded-lg border border-(--border) bg-(--shell) p-5">
             <h2 className="text-base font-semibold">Files</h2>
             <div className="mt-4 space-y-3">
-              <button className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-pink) hover:text-(--text)" type="button">
-                Add main photo
-              </button>
-              <button className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-purple) hover:text-(--text)" type="button">
-                Add pattern PDF
-              </button>
+              {photoFile ? (
+                <div className="flex items-center justify-between gap-2 rounded-md border border-(--border) bg-(--surface) px-4 py-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2 text-(--text)">
+                    <ImageIcon className="shrink-0" size={16} />
+                    <span className="truncate">{photoFile.name}</span>
+                  </span>
+                  <button
+                    className="shrink-0 text-(--muted) hover:text-(--text)"
+                    onClick={() => {
+                      setPhotoFile(null);
+                      if (photoInputRef.current) photoInputRef.current.value = "";
+                    }}
+                    title="Remove main photo"
+                    type="button"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-pink) hover:text-(--text)"
+                  onClick={() => photoInputRef.current?.click()}
+                  type="button"
+                >
+                  Add main photo
+                </button>
+              )}
+              {pdfFile ? (
+                <div className="flex items-center justify-between gap-2 rounded-md border border-(--border) bg-(--surface) px-4 py-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2 text-(--text)">
+                    <FileText className="shrink-0" size={16} />
+                    <span className="truncate">{pdfFile.name}</span>
+                  </span>
+                  <button
+                    className="shrink-0 text-(--muted) hover:text-(--text)"
+                    onClick={() => {
+                      setPdfFile(null);
+                      if (pdfInputRef.current) pdfInputRef.current.value = "";
+                    }}
+                    title="Remove pattern PDF"
+                    type="button"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="w-full rounded-md border border-dashed border-(--border) bg-(--surface) px-4 py-6 text-sm text-(--muted) transition hover:border-(--accent-purple) hover:text-(--text)"
+                  onClick={() => pdfInputRef.current?.click()}
+                  type="button"
+                >
+                  Add pattern PDF
+                </button>
+              )}
+              <input
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="hidden"
+                onChange={handlePhotoChange}
+                ref={photoInputRef}
+                type="file"
+              />
+              <input accept="application/pdf" className="hidden" onChange={handlePdfChange} ref={pdfInputRef} type="file" />
             </div>
           </div>
           <div className="rounded-lg border border-(--border) bg-(--surface-soft) p-4 text-sm leading-6 text-(--muted)">
-            Phase 1 keeps file controls visual only. Upload handling gets wired when photos and PDFs are implemented.
+            Photo and PDF uploads are attached once you save the project.
           </div>
         </aside>
       </form>

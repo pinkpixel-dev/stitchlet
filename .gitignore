@@ -13,6 +13,12 @@ output/playwright/
 !data/.gitkeep
 !uploads/.gitkeep
 !backups/.gitkeep
+
 DOCKER.md
 stitchlet-self-hosted-plan.md
 README_DOCKER.md
+CHANGELOG.md
+ERRORS.md
+MEMORY.md
+OVERVIEW.md
+ROADMAP.md
