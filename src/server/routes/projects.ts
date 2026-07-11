@@ -58,10 +58,16 @@ export function createProjectRoutes({ db }: { db: NonNullable<AppDependencies["d
   });
 
   projectRoutes.delete("/:id", async (c) => {
-    const deleted = await projects.delete(c.req.param("id"));
+    const id = c.req.param("id");
+    const deleted = await projects.delete(id);
 
     if (!deleted) {
       return c.json({ error: "Project not found" }, 404);
+    }
+
+    const projectDir = join(uploadsRoot, "projects", id);
+    if (existsSync(projectDir)) {
+      await rm(projectDir, { recursive: true, force: true });
     }
 
     return c.body(null, 204);

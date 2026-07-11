@@ -16,7 +16,7 @@ export function createProjectRepository(db: Database) {
     async create(input: CreateProjectInput) {
       const now = new Date().toISOString();
       const project: typeof schema.projects.$inferInsert = {
-        id: slugify(input.title),
+        id: await generateUniqueId(this, input.title),
         title: input.title,
         status: input.status,
         yarnType: input.yarnType,
@@ -126,4 +126,17 @@ function rowToProject(row: ProjectRow): Project {
 
 function slugify(value: string) {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+async function generateUniqueId(repo: { findById(id: string): Promise<Project | null> }, title: string) {
+  const base = slugify(title) || "project";
+  let candidate = base;
+  let suffix = 2;
+
+  while (await repo.findById(candidate)) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
 }
