@@ -13,9 +13,9 @@ const controlClass = "h-11 rounded-md border border-(--border) bg-(--surface-str
 /**
  * A single counter with its controls.
  *
- * "full" is the project page row (includes delete). "compact" stacks the
- * controls under the label so the row still works in the narrow counter
- * panel of the pattern workspace.
+ * "full" is the project page row (includes delete). "compact" keeps the
+ * label and controls together in the pattern workspace without crowding the
+ * PDF on phones.
  */
 export function CounterRow({ counter, onDelete, onPatch, variant = "full" }: CounterRowProps) {
   const isCompact = variant === "compact";
@@ -37,7 +37,13 @@ export function CounterRow({ counter, onDelete, onPatch, variant = "full" }: Cou
   );
 
   const controls = (
-    <div className={isCompact ? "grid grid-cols-4 gap-2" : "grid grid-cols-5 gap-2"}>
+    <div
+      className={
+        isCompact
+          ? "grid grid-cols-4 gap-1.5 min-[360px]:w-[12.125rem]"
+          : "grid grid-cols-5 gap-2"
+      }
+    >
       <button
         className={`${controlClass} ${isCompact ? "w-full text-(--text)" : "w-12 text-(--text)"}`}
         type="button"
@@ -85,7 +91,7 @@ export function CounterRow({ counter, onDelete, onPatch, variant = "full" }: Cou
 
   if (isCompact) {
     return (
-      <div className="space-y-3 rounded-md border border-(--border) bg-(--surface) p-3">
+      <div className="grid gap-2 rounded-md border border-(--border) bg-(--surface) p-2 min-[360px]:grid-cols-[minmax(0,1fr)_auto] min-[360px]:items-center">
         {label}
         {controls}
       </div>

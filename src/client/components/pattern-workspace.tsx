@@ -1,8 +1,11 @@
 import { ChevronDown, ChevronUp, Download, FileText, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Counter, Project } from "../../shared/schemas";
+import { getStoredVisibleCounterIds, setCounterVisibility } from "../lib/pattern-counter-visibility";
 import { CounterRow } from "./counter-row";
+
+const PdfDocumentViewer = lazy(() => import("./pdf-document-viewer"));
 
 type PatternWorkspaceProps = {
   project: Project;
@@ -25,7 +28,26 @@ export function PatternWorkspace({
   project,
 }: PatternWorkspaceProps) {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const storageKey = `stitchlet:pattern-counters:${project.id}`;
+  const [visibleCounterIds, setVisibleCounterIds] = useState<string[]>(() => {
+    try {
+      return getStoredVisibleCounterIds(counters, window.localStorage.getItem(storageKey));
+    } catch {
+      return getStoredVisibleCounterIds(counters, null);
+    }
+  });
   const closeRef = useRef<HTMLButtonElement>(null);
+  const visibleCounterIdSet = new Set(visibleCounterIds);
+  const visibleCounters = counters.filter((counter) => visibleCounterIdSet.has(counter.id));
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(visibleCounterIds));
+    } catch {
+      // The workspace still works when browser storage is blocked.
+    }
+  }, [storageKey, visibleCounterIds]);
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -80,40 +102,112 @@ export function PatternWorkspace({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <iframe
-          className="min-h-0 w-full flex-1 border-0"
-          src={`/api/projects/${project.id}/pdf`}
-          title={project.pdfFilename ?? "Pattern PDF"}
-        />
+        <Suspense
+          fallback={
+            <div className="min-h-0 flex-1 bg-(--surface-strong) p-4 text-sm text-(--muted)" role="status">
+              Loading PDF reader...
+            </div>
+          }
+        >
+          <PdfDocumentViewer
+            filename={project.pdfFilename}
+            source={`/api/projects/${project.id}/pdf`}
+          />
+        </Suspense>
 
         <aside className="flex shrink-0 flex-col border-t border-(--border) bg-(--shell) lg:h-auto lg:w-[22rem] lg:border-l lg:border-t-0">
-          <button
-            aria-expanded={isPanelOpen}
-            className="flex h-12 shrink-0 items-center justify-between px-4 text-sm font-medium text-(--text)"
-            onClick={() => setIsPanelOpen((value) => !value)}
-            title={isPanelOpen ? "Hide counters" : "Show counters"}
-            type="button"
-          >
-            <span>
-              Counters
-              {counters.length > 0 ? <span className="ml-2 text-(--muted)">{counters.length}</span> : null}
-            </span>
-            {isPanelOpen ? (
-              <ChevronDown className="text-(--muted)" size={17} />
-            ) : (
-              <ChevronUp className="text-(--muted)" size={17} />
-            )}
-          </button>
+          <div className="flex h-12 shrink-0 items-center gap-1 px-2">
+            <button
+              aria-controls="pattern-counter-panel"
+              aria-expanded={isPanelOpen}
+              className="flex h-10 min-w-0 flex-1 items-center justify-between rounded-md px-2 text-sm font-medium text-(--text) hover:bg-(--surface)"
+              onClick={() => {
+                setIsPanelOpen((value) => !value);
+                setIsPickerOpen(false);
+              }}
+              title={isPanelOpen ? "Hide counters" : "Show counters"}
+              type="button"
+            >
+              <span>
+                Counters
+                {visibleCounters.length > 0 ? (
+                  <span className="ml-2 text-(--muted)">{visibleCounters.length}</span>
+                ) : null}
+              </span>
+              {isPanelOpen ? (
+                <ChevronDown className="shrink-0 text-(--muted)" size={17} />
+              ) : (
+                <ChevronUp className="shrink-0 text-(--muted)" size={17} />
+              )}
+            </button>
+
+            {isPanelOpen && counters.length > 0 ? (
+              <button
+                aria-controls="pattern-counter-picker"
+                aria-expanded={isPickerOpen}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-(--border) bg-(--surface) px-3 text-xs font-medium text-(--muted) hover:text-(--text)"
+                onClick={() => setIsPickerOpen((value) => !value)}
+                title={isPickerOpen ? "Close counter chooser" : "Choose counters"}
+                type="button"
+              >
+                {isPickerOpen ? <X size={14} /> : null}
+                {isPickerOpen ? "Done" : "Choose"}
+              </button>
+            ) : null}
+          </div>
 
           {isPanelOpen ? (
-            <div className="min-h-0 max-h-[40dvh] flex-1 space-y-2 overflow-y-auto px-3 pb-3 lg:max-h-none">
+            <div
+              className="min-h-0 max-h-[28dvh] flex-1 space-y-2 overflow-y-auto px-3 pb-3 lg:max-h-none"
+              id="pattern-counter-panel"
+            >
               {counterError ? <p className="pb-1 text-sm text-(--muted)">{counterError}</p> : null}
               {counters.length === 0 ? (
                 <div className="rounded-md border border-dashed border-(--border) bg-(--surface-soft) p-3 text-sm text-(--muted)">
                   No counters yet. Close the pattern to add one.
                 </div>
               ) : null}
-              {counters.map((counter) => (
+              {counters.length > 0 && isPickerOpen ? (
+                <fieldset
+                  className="rounded-md border border-(--border) bg-(--surface) p-2"
+                  id="pattern-counter-picker"
+                >
+                  <legend className="sr-only">Choose counters to show</legend>
+                  <p className="px-2 pb-1 text-xs font-medium text-(--muted)">Show in workspace</p>
+                  <div className="space-y-1">
+                    {counters.map((counter) => (
+                      <label
+                        className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 text-sm hover:bg-(--surface-strong)"
+                        key={counter.id}
+                      >
+                        <input
+                          aria-label={`Show ${counter.name} in pattern workspace`}
+                          checked={visibleCounterIdSet.has(counter.id)}
+                          className="h-5 w-5 shrink-0 [accent-color:var(--accent-pink)]"
+                          onChange={(event) =>
+                            setVisibleCounterIds((currentIds) =>
+                              setCounterVisibility(currentIds, counter.id, event.target.checked),
+                            )
+                          }
+                          type="checkbox"
+                        />
+                        <span className="min-w-0 flex-1 truncate">{counter.name}</span>
+                        <span className="shrink-0 text-xs text-(--muted)">
+                          {counter.type === "round" ? "Round" : "Row"} {counter.currentValue}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
+
+              {counters.length > 0 && visibleCounters.length === 0 ? (
+                <div className="rounded-md border border-dashed border-(--border) bg-(--surface-soft) p-3 text-sm text-(--muted)">
+                  No counters selected. Use Choose to add one.
+                </div>
+              ) : null}
+
+              {visibleCounters.map((counter) => (
                 <CounterRow counter={counter} key={counter.id} onPatch={onPatchCounter} variant="compact" />
               ))}
             </div>
