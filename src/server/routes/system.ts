@@ -9,12 +9,24 @@ import type Database from "better-sqlite3";
 
 const execAsync = promisify(exec);
 
-export function createSystemRoutes({ sqlite }: { sqlite: Database.Database }) {
+/**
+ * `root` is the directory holding `data/` and `uploads/`. It defaults to the
+ * process working directory; tests pass a temp directory so a test run never
+ * reads, writes, or deletes a real library.
+ */
+export function createSystemRoutes({
+  root = process.cwd(),
+  sqlite,
+}: {
+  sqlite: Database.Database;
+  root?: string;
+}) {
   const router = new Hono();
 
   router.get("/backup", async (c) => {
-    const tempDir = join(process.cwd(), "data", `backup-${Date.now()}`);
-    const zipFile = join(process.cwd(), "data", `backup-${Date.now()}.zip`);
+    const stamp = Date.now();
+    const tempDir = join(root, "data", `backup-${stamp}`);
+    const zipFile = join(root, "data", `backup-${stamp}.zip`);
 
     try {
       // Create backup directory structure
@@ -25,7 +37,7 @@ export function createSystemRoutes({ sqlite }: { sqlite: Database.Database }) {
       await sqlite.backup(join(tempDir, "data", "stitchlet.db"));
 
       // Copy uploads if folder exists
-      const uploadsDir = join(process.cwd(), "uploads");
+      const uploadsDir = join(root, "uploads");
       if (existsSync(uploadsDir)) {
         await cp(uploadsDir, join(tempDir, "uploads"), { recursive: true });
       }
@@ -36,11 +48,11 @@ export function createSystemRoutes({ sqlite }: { sqlite: Database.Database }) {
       // Read ZIP
       const buffer = await readFile(zipFile);
 
-      // Clean up temp dir and zip file asynchronously
-      setTimeout(async () => {
-        await rm(tempDir, { recursive: true, force: true });
-        await rm(zipFile, { force: true });
-      }, 1000);
+      // The archive is fully in memory now, so clear the staging files before
+      // responding. A deferred cleanup never runs if the process exits first,
+      // which used to leave stray backup-* folders and zips behind in data/.
+      await rm(tempDir, { recursive: true, force: true });
+      await rm(zipFile, { force: true });
 
       // Return ZIP attachment
       c.header("Content-Type", "application/zip");
@@ -66,7 +78,7 @@ export function createSystemRoutes({ sqlite }: { sqlite: Database.Database }) {
       return c.json({ error: "No backup file provided" }, 400);
     }
 
-    const tempZip = join(process.cwd(), "data", `restore-${Date.now()}.zip`);
+    const tempZip = join(root, "data", `restore-${Date.now()}.zip`);
 
     try {
       const buffer = await file.arrayBuffer();
@@ -79,18 +91,18 @@ export function createSystemRoutes({ sqlite }: { sqlite: Database.Database }) {
           sqlite.close();
 
           // Delete existing DB and uploads
-          const dbFile = join(process.cwd(), "data", "stitchlet.db");
+          const dbFile = join(root, "data", "stitchlet.db");
           if (existsSync(dbFile)) {
             await rm(dbFile, { force: true });
           }
 
-          const uploadsDir = join(process.cwd(), "uploads");
+          const uploadsDir = join(root, "uploads");
           if (existsSync(uploadsDir)) {
             await rm(uploadsDir, { recursive: true, force: true });
           }
 
           // Unzip backup
-          await execAsync(`unzip -o "${tempZip}" -d "${process.cwd()}"`);
+          await execAsync(`unzip -o "${tempZip}" -d "${root}"`);
 
           // Clean up temp ZIP
           await rm(tempZip, { force: true });

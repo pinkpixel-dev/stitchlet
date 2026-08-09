@@ -11,6 +11,8 @@ import { createSystemRoutes } from "./routes/system";
 export type AppDependencies = {
   db?: BetterSQLite3Database<typeof schema>;
   sqlite?: any;
+  /** Directory holding `data/` and `uploads/`. Tests point this at a temp dir. */
+  root?: string;
 };
 
 export function createApp(dependencies: AppDependencies = {}) {
@@ -31,7 +33,7 @@ export function createApp(dependencies: AppDependencies = {}) {
   app.route("/api/projects", createProjectRoutes({ db }));
   app.route("/api/counters", createCounterRoutes({ db }));
   app.route("/api/sections", createSectionRoutes({ db }));
-  app.route("/api/system", createSystemRoutes({ sqlite }));
+  app.route("/api/system", createSystemRoutes({ root: dependencies.root, sqlite }));
 
   return app;
 }
