@@ -18,7 +18,7 @@ I made this because my own crochet projects were scattered across printed patter
 ## Features
 
 - Dashboard with search, status filtering (Active, Paused, Finished, Frogged), sorting by updated date/title/status, and grid or list view
-- Upload pattern PDFs and view them in an in-app viewer, or download them
+- Upload pattern PDFs and read them in a split view that keeps your counters on screen, so you can bump a row without closing the pattern (side by side on desktop, docked under the PDF on phones), or download them
 - Upload a project photo, with a replace/remove option
 - Multiple row or round counters per project, each with a name, target value, and completion state
 - Material fields for yarn type, yarn weight, hook size, colors, and finished size, plus custom key/value sections for anything else (safety eyes, stuffing, substitutions, etc.)

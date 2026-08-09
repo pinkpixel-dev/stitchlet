@@ -1,21 +1,11 @@
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Download,
-  FileText,
-  Minus,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Download, FileText, Pencil, Plus, Trash2, Upload, X } from "lucide-react";
 import { type ChangeEvent, type SyntheticEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { Counter, CustomSection, Project } from "../../shared/schemas";
 import { Button } from "../components/button";
+import { CounterRow } from "../components/counter-row";
 import { Field, SelectInput, TextArea, TextInput } from "../components/field";
+import { PatternWorkspace } from "../components/pattern-workspace";
 import {
   createCounter,
   createSection,
@@ -348,7 +338,8 @@ export function ProjectDetailPage() {
   }
 
   return (
-    <section className="space-y-6">
+    // Inert while the split view is open so tab order and taps stay inside it.
+    <section className="space-y-6" inert={isPdfViewerOpen}>
       <header className="rounded-lg border border-(--border) bg-(--shell) p-5">
         <Link className="inline-flex items-center gap-2 text-sm text-(--muted) hover:text-(--text)" to="/">
           <ArrowLeft size={16} />
@@ -663,63 +654,7 @@ export function ProjectDetailPage() {
                 </div>
               ) : null}
               {counters.map((counter) => (
-                <div className="grid gap-3 rounded-md border border-(--border) bg-(--surface) p-3 md:grid-cols-[1fr_auto]" key={counter.id}>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{counter.name}</p>
-                      {counter.isCompleted ? (
-                        <span className="rounded bg-(--chip) px-2 py-1 text-xs text-(--accent-purple)">Complete</span>
-                      ) : null}
-                    </div>
-                    <p className="mt-1 text-sm text-(--muted)">
-                      {counter.type === "round" ? "Round" : "Row"} {counter.currentValue}
-                      {counter.targetValue ? ` / ${counter.targetValue}` : ""}
-                    </p>
-                    {counter.notes ? <p className="mt-2 text-sm text-(--muted)">{counter.notes}</p> : null}
-                  </div>
-                  <div className="grid grid-cols-5 gap-2">
-                    <button
-                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--text)"
-                      type="button"
-                      title="Decrement"
-                      onClick={() => patchCounter(counter, { currentValue: Math.max(0, counter.currentValue - 1), isCompleted: false })}
-                    >
-                      <Minus className="mx-auto" size={18} />
-                    </button>
-                    <button
-                      className="h-11 w-12 rounded-md border border-(--border) bg-(--accent-pink) text-(--button-text)"
-                      type="button"
-                      title="Increment"
-                      onClick={() => patchCounter(counter, { currentValue: counter.currentValue + 1 })}
-                    >
-                      <Plus className="mx-auto" size={18} />
-                    </button>
-                    <button
-                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
-                      type="button"
-                      title="Reset"
-                      onClick={() => patchCounter(counter, { currentValue: 0, isCompleted: false })}
-                    >
-                      <RotateCcw className="mx-auto" size={17} />
-                    </button>
-                    <button
-                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
-                      type="button"
-                      title="Toggle complete"
-                      onClick={() => patchCounter(counter, { isCompleted: !counter.isCompleted })}
-                    >
-                      <CheckCircle2 className="mx-auto" size={17} />
-                    </button>
-                    <button
-                      className="h-11 w-12 rounded-md border border-(--border) bg-(--surface-strong) text-(--muted)"
-                      type="button"
-                      title="Delete counter"
-                      onClick={() => handleDeleteCounter(counter)}
-                    >
-                      <Trash2 className="mx-auto" size={17} />
-                    </button>
-                  </div>
-                </div>
+                <CounterRow counter={counter} key={counter.id} onDelete={handleDeleteCounter} onPatch={patchCounter} />
               ))}
             </div>
           </section>
@@ -730,39 +665,16 @@ export function ProjectDetailPage() {
           </section>
         </div>
       </div>
-      {/* PDF viewer modal */}
+
+      {/* Pattern + counters split view (portals to body, so it escapes the inert page) */}
       {isPdfViewerOpen && project.pdfPath ? (
-        <div className="fixed inset-0 z-50 flex flex-col bg-(--bg)">
-          <div className="flex h-14 shrink-0 items-center justify-between border-b border-(--border) bg-(--shell) px-5">
-            <div className="flex items-center gap-3">
-              <FileText className="text-(--accent-pink)" size={18} />
-              <span className="text-sm font-medium">{project.pdfFilename}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <a
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-(--border) bg-(--surface) px-3 text-sm text-(--muted) transition hover:text-(--text)"
-                download={project.pdfFilename}
-                href={`/api/projects/${project.id}/pdf/download`}
-              >
-                <Download size={15} />
-                Download
-              </a>
-              <button
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-(--border) bg-(--surface) text-(--muted) transition hover:text-(--text)"
-                onClick={() => setIsPdfViewerOpen(false)}
-                title="Close PDF viewer"
-                type="button"
-              >
-                <X size={17} />
-              </button>
-            </div>
-          </div>
-          <iframe
-            className="h-full w-full flex-1 border-0"
-            src={`/api/projects/${project.id}/pdf`}
-            title={project.pdfFilename ?? "Pattern PDF"}
-          />
-        </div>
+        <PatternWorkspace
+          counterError={counterError}
+          counters={counters}
+          onClose={() => setIsPdfViewerOpen(false)}
+          onPatchCounter={patchCounter}
+          project={project}
+        />
       ) : null}
     </section>
   );

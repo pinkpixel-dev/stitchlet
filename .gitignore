@@ -19,11 +19,12 @@ output/playwright/
 .codex/
 
 DOCKER.md
-stitchlet-self-hosted-plan.md
 README_DOCKER.md
 CHANGELOG.md
 ERRORS.md
 MEMORY.md
 OVERVIEW.md
 ROADMAP.md
+backups/
 submission/
+uploads/
