@@ -20,7 +20,7 @@
     "better-sqlite3": "12.10.0",
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
-    "hono": "4.13.1",
+    "hono": "4.13.7",
     "lucide-react": "1.18.0",
     "react": "19.2.7",
     "react-dom": "19.2.7",
